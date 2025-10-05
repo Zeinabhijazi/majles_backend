@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum UserType {
+  admin
+  client
+  reader
+
+  @@map("user_type")
+}
+
+model user {
+  id          Int         @id(map: "CREATE_USER_TABLE_PRIMARY_KEY") @default(autoincrement())
+  firstName   String      @map("first_name")
+  lastName    String      @map("last_name")
+  gender      Gender
+  userType    UserType    @map("user_type")
+  email       String      @unique @db.VarChar(320)
+  phoneNumber String      @map("phone_number") @db.VarChar(20)
+  password    String      @db.VarChar(255)
+  longitude   Float       @db.DoublePrecision
+  latitude    Float       @db.DoublePrecision
+  addressOne  String      @map("address_one")
+  addressTwo  String?     @map("address_two")
+  postNumber  Int         @map("post_number")
+  country     String
+  city        String
+  isDeleted   Boolean     @default(false) @map("is_deleted")
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz()
+  clientOrder order[]     @relation("ClientOrder")
+  readerOrder order[]     @relation("ReaderOrder")
+  token       authToken[]
+}
+
+model order {
+  id         Int      @id(map: "CREATE_ORDER_TABLE_PRIMARY_KEY") @default(autoincrement())
+  clientId   Int      @map("user_id") //foreign key column
+  readerId   Int?     @map("reader_id")
+  orderDate  DateTime @map("order_date") @db.Timestamptz()
+  longitude  Float?   @db.DoublePrecision
+  latitude   Float?   @db.DoublePrecision
+  addressOne String?  @map("address_one")
+  addressTwo String?  @map("address_two")
+  postNumber Int?     @map("post_number")
+  country    String?
+  city       String?
+  isDeleted  Boolean  @default(false) @map("is_deleted")
+  isAccepted Boolean  @default(false) @map("is_accepted")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  client     user     @relation("ClientOrder", fields: [clientId], references: [id], map: "FK_orders_client_id")
+  reader     user?    @relation("ReaderOrder", fields: [readerId], references: [id], map: "FK_orders_reader_id")
+}
+
+model authToken {
+  id          String   @id(map: "CREATE_AUTH_TOKEN_TABLE_PRIMARY_KEY")
+  userId      Int      @map("user_id")
+  expirayDate DateTime @map("expiray_date") @db.Timestamptz()
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  user        user     @relation(fields: [userId], references: [id], map: "FK_authToken_user_id")
+
+  @@map("auth_token")
+}
