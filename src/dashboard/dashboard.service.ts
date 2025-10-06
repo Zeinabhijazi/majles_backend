@@ -26,6 +26,7 @@ export class DashboardService {
     page: number,
     pageSize: number,
     userType: string,
+    search?: string,
   ): Promise<PaginationDto<UserTypeRes>> {
     const offset = (page - 1) * pageSize;
     const users = await this.prisma.user.findMany({
@@ -33,6 +34,9 @@ export class DashboardService {
         ...(userType && userType !== 'all'
           ? { userType: userType as UserType }
           : {}),
+        ...(search
+        ? { country: { contains: search, mode: "insensitive" } }
+        : {}),
       },
       skip: offset,
       take: pageSize,
