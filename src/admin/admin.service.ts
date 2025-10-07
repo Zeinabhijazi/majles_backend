@@ -46,10 +46,14 @@ export class AdminService {
     });
 
     const itemsCount = await this.prisma.order.count();
-
+    const itemsCountWithDel = await this.prisma.order.count({
+      where: { isDeleted : false }
+    });
+    
     return {
       content: orders,
       itemsCount,
+      itemsCountWithDel,
       pageCount: Math.ceil(itemsCount / pageSize)
     } as PaginationDto<OrderTypeRes>
   }
