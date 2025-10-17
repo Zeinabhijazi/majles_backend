@@ -11,8 +11,7 @@ import { normalizeDate } from '@/normalizeDate/normalize_date';
 import { OrdersStatus } from './orders-type/ordersStatus_ype';
 import { PrismaClientKnownRequestError } from '@generated/runtime/library';
 import { UserType } from '@generated/index';
-import { OrderTypeRes } from '@/admin/model_structure/orders_response';
-import { PaginationDto } from '@/dto/pagination.dto';
+import { OrdersType } from './orders-type/orders-type';
 
 @Injectable()
 export class OrderService {
@@ -51,31 +50,7 @@ export class OrderService {
     }
   }
 
-  // Cancel order (Remark: client should not cancel order if the order was accepted by reader)
-  async cancelOrderById(id: number): Promise<string> {
-    // Fetch the order first
-    const order = await this.prisma.order.findUnique({
-      where: { id },
-      select: { isAccepted: true, isDeleted: true },
-    });
-
-    if (!order) {
-      throw new Error('Order not found');
-    }
-
-    // Prevent deletion if already accepted
-    if (order.isAccepted) {
-      throw new Error('Cannot delete order: it has already been accepted');
-    }
-
-    await this.prisma.order.update({
-      where: { id },
-      data: { isDeleted: true },
-    });
-
-    return 'Order deleted successfully';
-  }
-
+  // Get all the orders of the logged in user
   async getOrdersById(
     page: number,
     pageSize: number,
@@ -160,16 +135,37 @@ export class OrderService {
     };
   }
 
+  // Cancel order (Remark: client should not cancel order if the order was accepted by reader)
+  async cancelOrderById(id: number): Promise<string> {
+    // Fetch the order first
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      select: { isAccepted: true, isDeleted: true },
+    });
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    // Prevent deletion if already accepted
+    if (order.isAccepted) {
+      throw new Error('Cannot delete order: it has already been accepted');
+    }
+
+    await this.prisma.order.update({
+      where: { id },
+      data: { isDeleted: true },
+    });
+
+    return 'Order deleted successfully';
+  }
+
   async updateOrderById(id: number, orderDto: OrderDto) {
     // If user is client --> change info for order
     if (UserType.client) {
       const order = await this.prisma.order.findFirstOrThrow({
-        include: {
-          client: true,
-          reader: true,
-        },
         where: {
-          OR: [{ clientId: id }, { readerId: id }],
+          id,
           isDeleted: false,
         },
       });
@@ -179,8 +175,7 @@ export class OrderService {
       }
 
       const orderNewData = {
-        readerId: orderDto.readerId,
-        orderDate: orderDto.orderDate,
+        orderDate: orderDto.orderDate, 
         addressOne: orderDto.addressOne,
         addressTwo: orderDto.addressTwo,
         country: orderDto.country,
@@ -193,18 +188,6 @@ export class OrderService {
       return this.prisma.order.update({
         where: { id },
         data: orderNewData,
-        select: {
-          id: true,
-          readerId: true,
-          orderDate: true,
-          addressOne: true,
-          addressTwo: true,
-          country: true,
-          city: true,
-          postNumber: true,
-          latitude: true,
-          longitude: true,
-        },
       });
     }
     // If user is reader --> accept this order or no

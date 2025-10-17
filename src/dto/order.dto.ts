@@ -9,7 +9,7 @@ import {
 export class OrderDto {
   @IsOptional()
   @IsNumber()
-  readerId: number;
+  readerId?: number;
 
   @IsDate()
   @IsNotEmpty()
@@ -17,15 +17,15 @@ export class OrderDto {
 
   @IsOptional()
   @IsNumber()
-  longitude: number;
+  longitude?: number;
 
   @IsOptional()
   @IsNumber()
-  latitude: number;
+  latitude?: number;
 
   @IsOptional()
   @IsString()
-  addressOne: string;
+  addressOne?: string;
 
   @IsOptional()
   @IsString()
@@ -33,13 +33,13 @@ export class OrderDto {
 
   @IsOptional()
   @IsString()
-  country: string;
+  country?: string;
 
   @IsOptional()
   @IsString()
-  city: string;
+  city?: string;
 
   @IsOptional()
   @IsNumber()
-  postNumber: number;
+  postNumber?: number;
 }

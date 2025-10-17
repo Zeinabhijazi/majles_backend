@@ -11,7 +11,8 @@ export class SendMailController {
     @Post('send')
     @HttpCode(200)
     async send(@Body() data: EmailDTO) {
-        return this.mailService.sendContactForm(data);
+        const result = await this.mailService.sendContactForm(data);
+        return { success: true, message: result }; 
     }
 
 }
