@@ -37,6 +37,7 @@ export class OrderController {
     return this.orderService.cancelOrderById(id);
   }
 
+  
   // Fetch all orders of a user who is currently logged in:
   @Roles(UserType.client, UserType.reader)
   @Get()
@@ -48,7 +49,7 @@ export class OrderController {
   ) {
     return this.orderService.getOrdersById(page, limit, status, search);
   }
-
+  
   // Edit order details:
   @Roles(UserType.client, UserType.reader)
   @Put(':id')
