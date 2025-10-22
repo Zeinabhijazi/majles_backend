@@ -18,9 +18,43 @@ import { UserType } from '@generated/index';
 @UseGuards(RolesGuard)
 @Controller('order')
 export class OrderController {
-  constructor(
-    private readonly orderService: OrderService,
-  ) {}
+  constructor(private readonly orderService: OrderService) {}
+
+  // Get order status:
+  @Roles(UserType.admin)
+  @Get('status')
+  getStatus() {
+    return this.orderService.getOrderStatus();
+  }
+
+  // Fetch all orders of a user who is currently logged in:
+  @Roles(UserType.client, UserType.reader)
+  @Get()
+  findOrders(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+    @Query('start') start?: string,
+    @Query('end') end?: string,
+    @Query('thisMonth') thisMonth?: boolean,
+  ) {
+    const startMs = start ? Number(start) : undefined;
+    const endMs = end ? Number(end) : undefined;
+
+    const startDate =
+      startMs && !Number.isNaN(startMs) ? new Date(startMs) : undefined;
+    const endDate = endMs && !Number.isNaN(endMs) ? new Date(endMs) : undefined;
+    return this.orderService.getOrdersById(
+      page,
+      limit,
+      status,
+      search,
+      startDate,
+      endDate,
+      thisMonth,
+    );
+  }
 
   // Add order:
   @Roles(UserType.client)
@@ -37,30 +71,10 @@ export class OrderController {
     return this.orderService.cancelOrderById(id);
   }
 
-  
-  // Fetch all orders of a user who is currently logged in:
-  @Roles(UserType.client, UserType.reader)
-  @Get()
-  findOrders(
-    @Query("page") page: number = 1, 
-    @Query("limit") limit: number = 10, 
-    @Query("status") status?: string,
-    @Query("search") search?: string,
-  ) {
-    return this.orderService.getOrdersById(page, limit, status, search);
-  }
-  
   // Edit order details:
   @Roles(UserType.client, UserType.reader)
   @Put(':id')
   updateOrder(@Param('id') id: number, @Body() body: OrderDto) {
     return this.orderService.updateOrderById(id, body);
-  }
-
-  // Get order status:
-  @Roles(UserType.admin)
-  @Get('status')
-  getStatus(){
-    return this.orderService.getOrderStatus();
   }
 }

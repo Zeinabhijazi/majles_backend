@@ -11,7 +11,6 @@ import { normalizeDate } from '@/normalizeDate/normalize_date';
 import { OrdersStatus } from './orders-type/ordersStatus_ype';
 import { PrismaClientKnownRequestError } from '@generated/runtime/library';
 import { UserType } from '@generated/index';
-import { OrdersType } from './orders-type/orders-type';
 
 @Injectable()
 export class OrderService {
@@ -20,6 +19,236 @@ export class OrderService {
     @Inject(UserContextService)
     private readonly user: UserContextService,
   ) {}
+
+  async getOrderStatus(): Promise<OrdersStatus> {
+    const todayUTC = new Date();
+    const todayDateOnly = new Date(
+      Date.UTC(
+        todayUTC.getUTCFullYear(),
+        todayUTC.getUTCMonth(),
+        todayUTC.getUTCDate(),
+      ),
+    );
+
+    const accepted = await this.prisma.order.count({
+      where: { isAccepted: true, isDeleted: false },
+    });
+
+    const cancelled = await this.prisma.order.count({
+      where: {
+        OR: [{ isDeleted: true }, { orderDate: { gt: todayDateOnly } }],
+      },
+    });
+
+    const pending = await this.prisma.order.count({
+      where: {
+        isAccepted: false,
+        isDeleted: false,
+        orderDate: { gt: todayDateOnly },
+      },
+    });
+
+    const completed = await this.prisma.order.count({
+      where: { orderDate: { lt: todayDateOnly } },
+    });
+
+    return { accepted, cancelled, pending, completed };
+  }
+
+  // Get all the orders of the logged in user
+  async getOrdersById(
+    page: number,
+    pageSize: number,
+    status?: string,
+    search?: string,
+    startDate?: Date,
+    endDate?: Date,
+    thisMonth?: boolean,
+  ) {
+    let userId = this.user.user.id;
+    if (this.user.user.userType === UserType.client) {
+      const offset = (page - 1) * pageSize;
+
+      const todayUTC = new Date();
+      const todayDateOnly = new Date(
+        Date.UTC(
+          todayUTC.getUTCFullYear(),
+          todayUTC.getUTCMonth(),
+          todayUTC.getUTCDate(),
+        ),
+      );
+      let where: any = { clientId: userId };
+
+      if (status && status !== 'all') {
+        if (status === 'pending') {
+          where = {
+            ...where,
+            isAccepted: false,
+            isDeleted: false,
+            orderDate: { gt: todayDateOnly },
+          };
+        } else if (status === 'completed') {
+          where = {
+            ...where,
+            orderDate: { lt: todayDateOnly },
+          };
+        } else if (status === 'rejected') {
+          where = {
+            ...where,
+            isDeleted: true,
+            orderDate: { gt: todayDateOnly },
+          };
+        } else if (status === 'accepted') {
+          where = {
+            ...where,
+            isAccepted: true,
+          };
+        }
+      }
+
+      if (search) {
+        where = {
+          ...where,
+          OR: [
+            {
+              reader: { firstName: { contains: search, mode: 'insensitive' } },
+            },
+            { reader: { lastName: { contains: search, mode: 'insensitive' } } },
+          ],
+        };
+      }
+
+      const orders = await this.prisma.order.findMany({
+        include: {
+          client: true,
+          reader: true,
+        },
+        where,
+        skip: offset,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // Add computed isCompleted flag
+      const ordersWithStatus = orders.map((order) => {
+        const orderDateUTC = new Date(order.orderDate);
+        const orderDateOnly = new Date(
+          Date.UTC(
+            orderDateUTC.getUTCFullYear(),
+            orderDateUTC.getUTCMonth(),
+            orderDateUTC.getUTCDate(),
+          ),
+        );
+
+        const isCompleted = orderDateOnly < todayDateOnly;
+        return { ...order, isCompleted };
+      });
+
+      const itemsCount = await this.prisma.order.count({ where });
+      return {
+        content: ordersWithStatus,
+        itemsCount,
+        pageCount: Math.ceil(itemsCount / pageSize),
+      };
+    }
+
+    if (this.user.user.userType === UserType.reader) {
+      const offset = (page - 1) * pageSize;
+
+      const todayUTC = new Date();
+      const todayDateOnly = new Date(
+        Date.UTC(
+          todayUTC.getUTCFullYear(),
+          todayUTC.getUTCMonth(),
+          todayUTC.getUTCDate(),
+        ),
+      );
+
+      let where: any = { readerId: userId };
+
+      if (startDate && endDate) {
+        where = {
+          ...where,
+          orderDate: {
+            ...where.orderDate,
+            gte: startDate,
+            lte: endDate,
+          },
+        };
+      }
+
+      if (status === 'pending') {
+        where = {
+          ...where,
+          isAccepted: false,
+          isDeleted: false,
+          orderDate: { gt: todayDateOnly },
+        };
+      }
+
+      if (thisMonth) {
+        const now = new Date();
+        const startOfMonthUTC = new Date(
+          Date.UTC(now.getFullYear(), now.getMonth(), 1),
+        );
+        const endOfMonthUTC = new Date(
+          Date.UTC(now.getFullYear(), now.getMonth() + 1, 1),
+        );
+
+        where = {
+          ...where,
+          orderDate: {
+            ...where.orderDate,
+            gte: startOfMonthUTC,
+            lt: endOfMonthUTC,
+          },
+        };
+      }
+
+      const orders = await this.prisma.order.findMany({
+        include: { client: true, reader: true },
+        where,
+        skip: offset,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const ordersWithStatus = orders.map((order) => {
+        const orderDateUTC = new Date(order.orderDate);
+        const orderDateOnly = new Date(
+          Date.UTC(
+            orderDateUTC.getUTCFullYear(),
+            orderDateUTC.getUTCMonth(),
+            orderDateUTC.getUTCDate(),
+          ),
+        );
+        return { ...order, isCompleted: orderDateOnly < todayDateOnly };
+      });
+
+      const itemsCount = await this.prisma.order.count({ where });
+
+      // counts
+      const pendingItemsCount = await this.prisma.order.count({
+        where: { readerId: userId, isAccepted: false, isDeleted: false },
+      });
+      const completedItemsCount = await this.prisma.order.count({
+        where: { readerId: userId, isAccepted: true, isDeleted: false },
+      });
+
+      const totalOrders = await this.prisma.order.count({
+        where: { readerId: userId, isDeleted: false },
+      });
+
+      return {
+        content: ordersWithStatus,
+        itemsCount,
+        pendingItemsCount,
+        completedItemsCount,
+        totalOrders,
+        pageCount: Math.ceil(itemsCount / pageSize),
+      };
+    }
+  }
 
   // Create order
   async createOrder(dto: OrderDto) {
@@ -48,91 +277,6 @@ export class OrderService {
       }
       throw error;
     }
-  }
-
-  // Get all the orders of the logged in user
-  async getOrdersById(
-    page: number,
-    pageSize: number,
-    status?: string,
-    search?: string,
-  ) {
-    const clientId = this.user.user.id;
-    const offset = (page - 1) * pageSize;
-    let where: any = {
-      OR: [{ clientId: clientId }, { readerId: clientId }],
-    };
-
-    // Add search filter
-    if (search) {
-      where = {
-        AND: [
-          where,
-          {
-            OR: [
-              {
-                reader: {
-                  firstName: { contains: search, mode: 'insensitive' },
-                },
-              },
-              {
-                reader: { lastName: { contains: search, mode: 'insensitive' } },
-              },
-            ],
-          },
-        ],
-      };
-    }
-
-    if (status && status !== 'all') {
-      if (status === 'pending') {
-        where.isAccepted = false;
-        where.isDeleted = false;
-      } else if (status === 'completed') {
-        where.isAccepted = true;
-        where.isDeleted = false;
-      } else if (status === 'rejected') {
-        where.isDeleted = true;
-      }
-    }
-
-    const orders = await this.prisma.order.findMany({
-      include: {
-        client: true,
-        reader: true,
-      },
-      where,
-      skip: offset,
-      take: pageSize,
-      orderBy: { createdAt: 'desc' },
-    });
-
-    const itemsCount = await this.prisma.order.count();
-    
-    const pendingItemsCount = await this.prisma.order.count({
-      where: { clientId: clientId, isAccepted: false, isDeleted : false }
-    });
-
-    const completedItemsCount = await this.prisma.order.count({
-      where:  { clientId: clientId, isAccepted: true, isDeleted : false }
-    });
-
-    const totalOrders = await this.prisma.order.count({
-      where: { clientId: clientId, isDeleted : false }
-    });
-
-    if (!orders) {
-      throw new NotFoundException(`Order with id ${clientId} not found`);
-    }
-
-    return {
-      content: orders,
-      pendingItemsCount,
-      completedItemsCount,
-      totalOrders,
-      itemsCount,
-      pageCount: Math.ceil(itemsCount / pageSize),
-    };
   }
 
   // Cancel order (Remark: client should not cancel order if the order was accepted by reader)
@@ -175,7 +319,7 @@ export class OrderService {
       }
 
       const orderNewData = {
-        orderDate: orderDto.orderDate, 
+        orderDate: orderDto.orderDate,
         addressOne: orderDto.addressOne,
         addressTwo: orderDto.addressTwo,
         country: orderDto.country,
@@ -199,21 +343,5 @@ export class OrderService {
         },
       });
     }
-  }
-
-  async getOrderStatus(): Promise<OrdersStatus> {
-    const accepted = await this.prisma.order.count({
-      where: { isAccepted: true, isDeleted: false },
-    });
-
-    const cancelled = await this.prisma.order.count({
-      where: { isDeleted: true },
-    });
-
-    const pending = await this.prisma.order.count({
-      where: { isAccepted: false, isDeleted: false },
-    });
-
-    return { accepted, cancelled, pending };
   }
 }

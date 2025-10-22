@@ -17,8 +17,10 @@ export class AdminService {
     startDate?: Date, 
     endDate?: Date 
   ): Promise <PaginationDto<OrderTypeRes>> {
+
     const offset = (page - 1) * pageSize;
-    let where: any = { isDeleted: false };
+    let where: any = {};
+
     if (status && status !== "all") {
       if (status === "assigned") {
         where.isAccepted = true;
@@ -45,7 +47,8 @@ export class AdminService {
       take: pageSize,
     });
 
-    const itemsCount = await this.prisma.order.count();
+    const itemsCount = await this.prisma.order.count({where});
+    
     const itemsCountWithDel = await this.prisma.order.count({
       where: { isDeleted : false }
     });
@@ -106,7 +109,25 @@ export class AdminService {
       },
     });
 
-    const itemsCount = await this.prisma.user.count();
+    const itemsCount = await this.prisma.user.count({
+      where: {
+      ...(userType &&  userType !=="all"
+        ? { userType: userType as UserType } 
+        : {}),
+      ...(isDeleted && isDeleted !== "all"
+        ? { isDeleted: isDeleted === "true" } 
+        : {}),
+      ...(search
+        ? {
+          OR: [
+            { firstName: { contains: search, mode: "insensitive" } },
+            { lastName: { contains: search, mode: "insensitive" } },
+            { email: { contains: search, mode: "insensitive" } },
+          ],
+        }
+        : {}),
+      }
+    });
 
     return {
       content: users,
