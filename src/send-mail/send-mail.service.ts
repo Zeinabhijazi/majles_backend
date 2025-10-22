@@ -19,8 +19,7 @@ export class SendMailService {
   }
 
   async sendContactForm(data: EmailDTO) {
-    //console.log("send")
-    const { firstname, lastname, email, message } = data;
+    const { firstname, lastname, email, phoneNumber,  message } = data;
     const subject = `New Contact Form Message from ${firstname} ${lastname}`;
     const text = `
       From: ${firstname} ${lastname}
@@ -44,6 +43,18 @@ export class SendMailService {
       html,
     });
     
+    // Send confirmation email to the user
+    await this.transporter.sendMail({
+      from: `"My App" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "Thank you for contacting us!",
+      html: `
+        <p>Hi ${firstname},</p>
+        <p>We received your message and will get back to you soon.</p>
+        <p>Best regards,<br>My App Team</p>
+      `,
+    });
+
     return " Email sent successfully";
   }
 }
