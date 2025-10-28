@@ -73,4 +73,11 @@ export class AdminController {
       assignOrderDto,
     );
   }
+
+  // Get monthly registration status
+  @Roles(UserType.admin)
+  @Get('status')
+  async getUserStats(@Query('year') year?: number) {
+    return this.adminService.getMonthlyRegistrationStats(Number(year));
+  }
 }

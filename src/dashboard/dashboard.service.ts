@@ -27,6 +27,7 @@ export class DashboardService {
     pageSize: number,
     userType: string,
     search?: string,
+    name?: string,
   ): Promise<PaginationDto<UserTypeRes>> {
     const offset = (page - 1) * pageSize;
     const users = await this.prisma.user.findMany({
@@ -35,8 +36,43 @@ export class DashboardService {
           ? { userType: userType as UserType }
           : {}),
         ...(search
-        ? { country: { contains: search, mode: "insensitive" } }
-        : {}),
+          ? {
+              OR: [
+                { country: { contains: search, mode: 'insensitive' } },
+                { city: { contains: search, mode: 'insensitive' } },
+              ],
+            }
+          : {}),
+        ...(name
+          ? {
+              OR: [
+                { firstName: { contains: name, mode: 'insensitive' } },
+                { lastName: { contains: name, mode: 'insensitive' } },
+                {
+                  AND: name.includes(' ')
+                    ? name.split(' ').map((part, i, arr) => {
+                        if (arr.length === 2) {
+                          return i === 0
+                            ? {
+                                firstName: {
+                                  contains: part,
+                                  mode: 'insensitive',
+                                },
+                              }
+                            : {
+                                lastName: {
+                                  contains: part,
+                                  mode: 'insensitive',
+                                },
+                              };
+                        }
+                        return {};
+                      })
+                    : undefined,
+                },
+              ],
+            }
+          : {}),
       },
       skip: offset,
       take: pageSize,
@@ -45,6 +81,7 @@ export class DashboardService {
         id: true,
         firstName: true,
         lastName: true,
+        email: true,
         phoneNumber: true,
         addressOne: true,
         addressTwo: true,
@@ -59,14 +96,14 @@ export class DashboardService {
 
     const itemsCount = await this.prisma.user.count({
       where: {
-        userType: "reader",
-      }
+        userType: 'reader',
+      },
     });
 
     return {
       content: users,
       itemsCount,
-      pageCount: Math.ceil(itemsCount / pageSize)
-    } as PaginationDto<UserTypeRes>
+      pageCount: Math.ceil(itemsCount / pageSize),
+    } as PaginationDto<UserTypeRes>;
   }
 }

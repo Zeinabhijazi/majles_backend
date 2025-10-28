@@ -153,8 +153,7 @@ exports.Prisma.OrderScalarFieldEnum = {
   postNumber: 'postNumber',
   country: 'country',
   city: 'city',
-  isDeleted: 'isDeleted',
-  isAccepted: 'isAccepted',
+  status: 'status',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -190,6 +189,14 @@ exports.UserType = exports.$Enums.UserType = {
   admin: 'admin',
   client: 'client',
   reader: 'reader'
+};
+
+exports.OrderStatus = exports.$Enums.OrderStatus = {
+  pending: 'pending',
+  completed: 'completed',
+  deleted: 'deleted',
+  rejected: 'rejected',
+  accepted: 'accepted'
 };
 
 exports.Prisma.ModelName = {
