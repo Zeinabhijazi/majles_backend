@@ -19,8 +19,9 @@ export class DashboardController {
     @Query('userType') userType: string,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
-    @Query("search") search?: string,    
+    @Query("search") search?: string, 
+    @Query("name") name?: string,   
   ): Promise<PaginationDto<UserTypeRes>> {
-    return await this.dashboardService.getAllReaders(page, limit, userType, search);
+    return await this.dashboardService.getAllReaders(page, limit, userType, search, name);
   }
 }

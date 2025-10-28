@@ -49,6 +49,17 @@ export const UserType: {
 
 export type UserType = (typeof UserType)[keyof typeof UserType]
 
+
+export const OrderStatus: {
+  pending: 'pending',
+  completed: 'completed',
+  deleted: 'deleted',
+  rejected: 'rejected',
+  accepted: 'accepted'
+};
+
+export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]
+
 }
 
 export type Gender = $Enums.Gender
@@ -58,6 +69,10 @@ export const Gender: typeof $Enums.Gender
 export type UserType = $Enums.UserType
 
 export const UserType: typeof $Enums.UserType
+
+export type OrderStatus = $Enums.OrderStatus
+
+export const OrderStatus: typeof $Enums.OrderStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -2499,8 +2514,7 @@ export namespace Prisma {
     postNumber: number | null
     country: string | null
     city: string | null
-    isDeleted: boolean | null
-    isAccepted: boolean | null
+    status: $Enums.OrderStatus | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2517,8 +2531,7 @@ export namespace Prisma {
     postNumber: number | null
     country: string | null
     city: string | null
-    isDeleted: boolean | null
-    isAccepted: boolean | null
+    status: $Enums.OrderStatus | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2535,8 +2548,7 @@ export namespace Prisma {
     postNumber: number
     country: number
     city: number
-    isDeleted: number
-    isAccepted: number
+    status: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -2573,8 +2585,7 @@ export namespace Prisma {
     postNumber?: true
     country?: true
     city?: true
-    isDeleted?: true
-    isAccepted?: true
+    status?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2591,8 +2602,7 @@ export namespace Prisma {
     postNumber?: true
     country?: true
     city?: true
-    isDeleted?: true
-    isAccepted?: true
+    status?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2609,8 +2619,7 @@ export namespace Prisma {
     postNumber?: true
     country?: true
     city?: true
-    isDeleted?: true
-    isAccepted?: true
+    status?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -2714,8 +2723,7 @@ export namespace Prisma {
     postNumber: number | null
     country: string | null
     city: string | null
-    isDeleted: boolean
-    isAccepted: boolean
+    status: $Enums.OrderStatus
     createdAt: Date
     updatedAt: Date
     _count: OrderCountAggregateOutputType | null
@@ -2751,8 +2759,7 @@ export namespace Prisma {
     postNumber?: boolean
     country?: boolean
     city?: boolean
-    isDeleted?: boolean
-    isAccepted?: boolean
+    status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     client?: boolean | userDefaultArgs<ExtArgs>
@@ -2771,8 +2778,7 @@ export namespace Prisma {
     postNumber?: boolean
     country?: boolean
     city?: boolean
-    isDeleted?: boolean
-    isAccepted?: boolean
+    status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     client?: boolean | userDefaultArgs<ExtArgs>
@@ -2791,8 +2797,7 @@ export namespace Prisma {
     postNumber?: boolean
     country?: boolean
     city?: boolean
-    isDeleted?: boolean
-    isAccepted?: boolean
+    status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     client?: boolean | userDefaultArgs<ExtArgs>
@@ -2811,13 +2816,12 @@ export namespace Prisma {
     postNumber?: boolean
     country?: boolean
     city?: boolean
-    isDeleted?: boolean
-    isAccepted?: boolean
+    status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type orderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "clientId" | "readerId" | "orderDate" | "longitude" | "latitude" | "addressOne" | "addressTwo" | "postNumber" | "country" | "city" | "isDeleted" | "isAccepted" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
+  export type orderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "clientId" | "readerId" | "orderDate" | "longitude" | "latitude" | "addressOne" | "addressTwo" | "postNumber" | "country" | "city" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
   export type orderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     client?: boolean | userDefaultArgs<ExtArgs>
     reader?: boolean | order$readerArgs<ExtArgs>
@@ -2849,8 +2853,7 @@ export namespace Prisma {
       postNumber: number | null
       country: string | null
       city: string | null
-      isDeleted: boolean
-      isAccepted: boolean
+      status: $Enums.OrderStatus
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["order"]>
@@ -3289,8 +3292,7 @@ export namespace Prisma {
     readonly postNumber: FieldRef<"order", 'Int'>
     readonly country: FieldRef<"order", 'String'>
     readonly city: FieldRef<"order", 'String'>
-    readonly isDeleted: FieldRef<"order", 'Boolean'>
-    readonly isAccepted: FieldRef<"order", 'Boolean'>
+    readonly status: FieldRef<"order", 'OrderStatus'>
     readonly createdAt: FieldRef<"order", 'DateTime'>
     readonly updatedAt: FieldRef<"order", 'DateTime'>
   }
@@ -4868,8 +4870,7 @@ export namespace Prisma {
     postNumber: 'postNumber',
     country: 'country',
     city: 'city',
-    isDeleted: 'isDeleted',
-    isAccepted: 'isAccepted',
+    status: 'status',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -5005,6 +5006,20 @@ export namespace Prisma {
    * Reference to a field of type 'DateTime[]'
    */
   export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'OrderStatus'
+   */
+  export type EnumOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrderStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'OrderStatus[]'
+   */
+  export type ListEnumOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrderStatus[]'>
     
   /**
    * Deep Input Types
@@ -5154,8 +5169,7 @@ export namespace Prisma {
     postNumber?: IntNullableFilter<"order"> | number | null
     country?: StringNullableFilter<"order"> | string | null
     city?: StringNullableFilter<"order"> | string | null
-    isDeleted?: BoolFilter<"order"> | boolean
-    isAccepted?: BoolFilter<"order"> | boolean
+    status?: EnumOrderStatusFilter<"order"> | $Enums.OrderStatus
     createdAt?: DateTimeFilter<"order"> | Date | string
     updatedAt?: DateTimeFilter<"order"> | Date | string
     client?: XOR<UserScalarRelationFilter, userWhereInput>
@@ -5174,8 +5188,7 @@ export namespace Prisma {
     postNumber?: SortOrderInput | SortOrder
     country?: SortOrderInput | SortOrder
     city?: SortOrderInput | SortOrder
-    isDeleted?: SortOrder
-    isAccepted?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     client?: userOrderByWithRelationInput
@@ -5197,8 +5210,7 @@ export namespace Prisma {
     postNumber?: IntNullableFilter<"order"> | number | null
     country?: StringNullableFilter<"order"> | string | null
     city?: StringNullableFilter<"order"> | string | null
-    isDeleted?: BoolFilter<"order"> | boolean
-    isAccepted?: BoolFilter<"order"> | boolean
+    status?: EnumOrderStatusFilter<"order"> | $Enums.OrderStatus
     createdAt?: DateTimeFilter<"order"> | Date | string
     updatedAt?: DateTimeFilter<"order"> | Date | string
     client?: XOR<UserScalarRelationFilter, userWhereInput>
@@ -5217,8 +5229,7 @@ export namespace Prisma {
     postNumber?: SortOrderInput | SortOrder
     country?: SortOrderInput | SortOrder
     city?: SortOrderInput | SortOrder
-    isDeleted?: SortOrder
-    isAccepted?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: orderCountOrderByAggregateInput
@@ -5243,8 +5254,7 @@ export namespace Prisma {
     postNumber?: IntNullableWithAggregatesFilter<"order"> | number | null
     country?: StringNullableWithAggregatesFilter<"order"> | string | null
     city?: StringNullableWithAggregatesFilter<"order"> | string | null
-    isDeleted?: BoolWithAggregatesFilter<"order"> | boolean
-    isAccepted?: BoolWithAggregatesFilter<"order"> | boolean
+    status?: EnumOrderStatusWithAggregatesFilter<"order"> | $Enums.OrderStatus
     createdAt?: DateTimeWithAggregatesFilter<"order"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"order"> | Date | string
   }
@@ -5471,8 +5481,7 @@ export namespace Prisma {
     postNumber?: number | null
     country?: string | null
     city?: string | null
-    isDeleted?: boolean
-    isAccepted?: boolean
+    status?: $Enums.OrderStatus
     createdAt?: Date | string
     updatedAt?: Date | string
     client: userCreateNestedOneWithoutClientOrderInput
@@ -5491,8 +5500,7 @@ export namespace Prisma {
     postNumber?: number | null
     country?: string | null
     city?: string | null
-    isDeleted?: boolean
-    isAccepted?: boolean
+    status?: $Enums.OrderStatus
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -5506,8 +5514,7 @@ export namespace Prisma {
     postNumber?: NullableIntFieldUpdateOperationsInput | number | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
-    isDeleted?: BoolFieldUpdateOperationsInput | boolean
-    isAccepted?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     client?: userUpdateOneRequiredWithoutClientOrderNestedInput
@@ -5526,8 +5533,7 @@ export namespace Prisma {
     postNumber?: NullableIntFieldUpdateOperationsInput | number | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
-    isDeleted?: BoolFieldUpdateOperationsInput | boolean
-    isAccepted?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5544,8 +5550,7 @@ export namespace Prisma {
     postNumber?: number | null
     country?: string | null
     city?: string | null
-    isDeleted?: boolean
-    isAccepted?: boolean
+    status?: $Enums.OrderStatus
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -5559,8 +5564,7 @@ export namespace Prisma {
     postNumber?: NullableIntFieldUpdateOperationsInput | number | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
-    isDeleted?: BoolFieldUpdateOperationsInput | boolean
-    isAccepted?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5577,8 +5581,7 @@ export namespace Prisma {
     postNumber?: NullableIntFieldUpdateOperationsInput | number | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
-    isDeleted?: BoolFieldUpdateOperationsInput | boolean
-    isAccepted?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -5954,6 +5957,13 @@ export namespace Prisma {
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
+  export type EnumOrderStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrderStatus | EnumOrderStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumOrderStatusFilter<$PrismaModel> | $Enums.OrderStatus
+  }
+
   export type UserScalarRelationFilter = {
     is?: userWhereInput
     isNot?: userWhereInput
@@ -5976,8 +5986,7 @@ export namespace Prisma {
     postNumber?: SortOrder
     country?: SortOrder
     city?: SortOrder
-    isDeleted?: SortOrder
-    isAccepted?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -6003,8 +6012,7 @@ export namespace Prisma {
     postNumber?: SortOrder
     country?: SortOrder
     city?: SortOrder
-    isDeleted?: SortOrder
-    isAccepted?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -6021,8 +6029,7 @@ export namespace Prisma {
     postNumber?: SortOrder
     country?: SortOrder
     city?: SortOrder
-    isDeleted?: SortOrder
-    isAccepted?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -6066,6 +6073,16 @@ export namespace Prisma {
     _sum?: NestedFloatNullableFilter<$PrismaModel>
     _min?: NestedFloatNullableFilter<$PrismaModel>
     _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
+  export type EnumOrderStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrderStatus | EnumOrderStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel> | $Enums.OrderStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumOrderStatusFilter<$PrismaModel>
+    _max?: NestedEnumOrderStatusFilter<$PrismaModel>
   }
 
   export type authTokenCountOrderByAggregateInput = {
@@ -6292,6 +6309,10 @@ export namespace Prisma {
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type EnumOrderStatusFieldUpdateOperationsInput = {
+    set?: $Enums.OrderStatus
   }
 
   export type userUpdateOneRequiredWithoutClientOrderNestedInput = {
@@ -6536,6 +6557,13 @@ export namespace Prisma {
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
+  export type NestedEnumOrderStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrderStatus | EnumOrderStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumOrderStatusFilter<$PrismaModel> | $Enums.OrderStatus
+  }
+
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -6568,6 +6596,16 @@ export namespace Prisma {
     _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
+  export type NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.OrderStatus | EnumOrderStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.OrderStatus[] | ListEnumOrderStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel> | $Enums.OrderStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumOrderStatusFilter<$PrismaModel>
+    _max?: NestedEnumOrderStatusFilter<$PrismaModel>
+  }
+
   export type orderCreateWithoutClientInput = {
     orderDate: Date | string
     longitude?: number | null
@@ -6577,8 +6615,7 @@ export namespace Prisma {
     postNumber?: number | null
     country?: string | null
     city?: string | null
-    isDeleted?: boolean
-    isAccepted?: boolean
+    status?: $Enums.OrderStatus
     createdAt?: Date | string
     updatedAt?: Date | string
     reader?: userCreateNestedOneWithoutReaderOrderInput
@@ -6595,8 +6632,7 @@ export namespace Prisma {
     postNumber?: number | null
     country?: string | null
     city?: string | null
-    isDeleted?: boolean
-    isAccepted?: boolean
+    status?: $Enums.OrderStatus
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -6620,8 +6656,7 @@ export namespace Prisma {
     postNumber?: number | null
     country?: string | null
     city?: string | null
-    isDeleted?: boolean
-    isAccepted?: boolean
+    status?: $Enums.OrderStatus
     createdAt?: Date | string
     updatedAt?: Date | string
     client: userCreateNestedOneWithoutClientOrderInput
@@ -6638,8 +6673,7 @@ export namespace Prisma {
     postNumber?: number | null
     country?: string | null
     city?: string | null
-    isDeleted?: boolean
-    isAccepted?: boolean
+    status?: $Enums.OrderStatus
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -6709,8 +6743,7 @@ export namespace Prisma {
     postNumber?: IntNullableFilter<"order"> | number | null
     country?: StringNullableFilter<"order"> | string | null
     city?: StringNullableFilter<"order"> | string | null
-    isDeleted?: BoolFilter<"order"> | boolean
-    isAccepted?: BoolFilter<"order"> | boolean
+    status?: EnumOrderStatusFilter<"order"> | $Enums.OrderStatus
     createdAt?: DateTimeFilter<"order"> | Date | string
     updatedAt?: DateTimeFilter<"order"> | Date | string
   }
@@ -7087,8 +7120,7 @@ export namespace Prisma {
     postNumber?: number | null
     country?: string | null
     city?: string | null
-    isDeleted?: boolean
-    isAccepted?: boolean
+    status?: $Enums.OrderStatus
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -7104,8 +7136,7 @@ export namespace Prisma {
     postNumber?: number | null
     country?: string | null
     city?: string | null
-    isDeleted?: boolean
-    isAccepted?: boolean
+    status?: $Enums.OrderStatus
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -7126,8 +7157,7 @@ export namespace Prisma {
     postNumber?: NullableIntFieldUpdateOperationsInput | number | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
-    isDeleted?: BoolFieldUpdateOperationsInput | boolean
-    isAccepted?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     reader?: userUpdateOneWithoutReaderOrderNestedInput
@@ -7144,8 +7174,7 @@ export namespace Prisma {
     postNumber?: NullableIntFieldUpdateOperationsInput | number | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
-    isDeleted?: BoolFieldUpdateOperationsInput | boolean
-    isAccepted?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -7161,8 +7190,7 @@ export namespace Prisma {
     postNumber?: NullableIntFieldUpdateOperationsInput | number | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
-    isDeleted?: BoolFieldUpdateOperationsInput | boolean
-    isAccepted?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -7176,8 +7204,7 @@ export namespace Prisma {
     postNumber?: NullableIntFieldUpdateOperationsInput | number | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
-    isDeleted?: BoolFieldUpdateOperationsInput | boolean
-    isAccepted?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     client?: userUpdateOneRequiredWithoutClientOrderNestedInput
@@ -7194,8 +7221,7 @@ export namespace Prisma {
     postNumber?: NullableIntFieldUpdateOperationsInput | number | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
-    isDeleted?: BoolFieldUpdateOperationsInput | boolean
-    isAccepted?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -7211,8 +7237,7 @@ export namespace Prisma {
     postNumber?: NullableIntFieldUpdateOperationsInput | number | null
     country?: NullableStringFieldUpdateOperationsInput | string | null
     city?: NullableStringFieldUpdateOperationsInput | string | null
-    isDeleted?: BoolFieldUpdateOperationsInput | boolean
-    isAccepted?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

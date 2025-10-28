@@ -66,6 +66,7 @@ export class OrderService {
     thisMonth?: boolean,
   ) {
     let userId = this.user.user.id;
+
     if (this.user.user.userType === UserType.client) {
       const offset = (page - 1) * pageSize;
 
@@ -77,6 +78,7 @@ export class OrderService {
           todayUTC.getUTCDate(),
         ),
       );
+
       let where: any = { clientId: userId };
 
       if (status && status !== 'all') {
@@ -107,13 +109,42 @@ export class OrderService {
       }
 
       if (search) {
+        const [firstPart, lastPart] = search.trim().split(' ');
+
         where = {
           ...where,
           OR: [
             {
-              reader: { firstName: { contains: search, mode: 'insensitive' } },
+              reader: {
+                firstName: { contains: search, mode: 'insensitive' },
+              },
             },
-            { reader: { lastName: { contains: search, mode: 'insensitive' } } },
+            {
+              reader: {
+                lastName: { contains: search, mode: 'insensitive' },
+              },
+            },
+            ...(lastPart
+              ? [
+                  {
+                    AND: [
+                      {
+                        reader: {
+                          firstName: {
+                            contains: firstPart,
+                            mode: 'insensitive',
+                          },
+                        },
+                      },
+                      {
+                        reader: {
+                          lastName: { contains: lastPart, mode: 'insensitive' },
+                        },
+                      },
+                    ],
+                  },
+                ]
+              : []),
           ],
         };
       }
@@ -152,7 +183,7 @@ export class OrderService {
       };
     }
 
-    if (this.user.user.userType === UserType.reader) {
+    /*if (this.user.user.userType === UserType.reader) {
       const offset = (page - 1) * pageSize;
 
       const todayUTC = new Date();
@@ -166,17 +197,18 @@ export class OrderService {
 
       let where: any = { readerId: userId };
 
+      // Date filter
       if (startDate && endDate) {
         where = {
           ...where,
           orderDate: {
-            ...where.orderDate,
             gte: startDate,
             lte: endDate,
           },
         };
       }
 
+      // Pending orders
       if (status === 'pending') {
         where = {
           ...where,
@@ -185,8 +217,8 @@ export class OrderService {
           orderDate: { gt: todayDateOnly },
         };
       }
-
-      if (thisMonth) {
+      // This month orders
+      else if (thisMonth) {
         const now = new Date();
         const startOfMonthUTC = new Date(
           Date.UTC(now.getFullYear(), now.getMonth(), 1),
@@ -198,13 +230,14 @@ export class OrderService {
         where = {
           ...where,
           orderDate: {
-            ...where.orderDate,
             gte: startOfMonthUTC,
             lt: endOfMonthUTC,
           },
+          isDeleted: false,
         };
       }
 
+      // Fetch data
       const orders = await this.prisma.order.findMany({
         include: { client: true, reader: true },
         where,
@@ -213,6 +246,7 @@ export class OrderService {
         orderBy: { createdAt: 'desc' },
       });
 
+      // Add computed status
       const ordersWithStatus = orders.map((order) => {
         const orderDateUTC = new Date(order.orderDate);
         const orderDateOnly = new Date(
@@ -222,22 +256,25 @@ export class OrderService {
             orderDateUTC.getUTCDate(),
           ),
         );
-        return { ...order, isCompleted: orderDateOnly < todayDateOnly };
+        const isCompleted =
+          order.isAccepted && orderDateOnly < todayDateOnly && !order.isDeleted;
+        return { ...order, isCompleted };
       });
 
-      const itemsCount = await this.prisma.order.count({ where });
-
-      // counts
-      const pendingItemsCount = await this.prisma.order.count({
-        where: { readerId: userId, isAccepted: false, isDeleted: false },
-      });
-      const completedItemsCount = await this.prisma.order.count({
-        where: { readerId: userId, isAccepted: true, isDeleted: false },
-      });
-
-      const totalOrders = await this.prisma.order.count({
-        where: { readerId: userId, isDeleted: false },
-      });
+      // Counts in parallel
+      const [itemsCount, pendingItemsCount, completedItemsCount, totalOrders] =
+        await Promise.all([
+          this.prisma.order.count({ where }),
+          this.prisma.order.count({
+            where: { readerId: userId, isAccepted: false, isDeleted: false },
+          }),
+          this.prisma.order.count({
+            where: { readerId: userId, isAccepted: true, isDeleted: false },
+          }),
+          this.prisma.order.count({
+            where: { readerId: userId, isDeleted: false },
+          }),
+        ]);
 
       return {
         content: ordersWithStatus,
@@ -247,7 +284,7 @@ export class OrderService {
         totalOrders,
         pageCount: Math.ceil(itemsCount / pageSize),
       };
-    }
+    }*/
   }
 
   // Create order
