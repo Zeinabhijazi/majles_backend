@@ -20,6 +20,14 @@ import { UserType } from '@generated/index';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
+  // Add order:
+  @Roles(UserType.client)
+  @Post()
+  @HttpCode(200)
+  createOrder(@Body() body: OrderDto) {
+    return this.orderService.createOrder(body);
+  }
+
   // Get order status:
   @Roles(UserType.admin)
   @Get('status')
@@ -35,40 +43,13 @@ export class OrderController {
     @Query('limit') limit: number = 10,
     @Query('status') status?: string,
     @Query('search') search?: string,
-    @Query('start') start?: string,
-    @Query('end') end?: string,
-    @Query('thisMonth') thisMonth?: boolean,
   ) {
-    const startMs = start ? Number(start) : undefined;
-    const endMs = end ? Number(end) : undefined;
-
-    const startDate =
-      startMs && !Number.isNaN(startMs) ? new Date(startMs) : undefined;
-    const endDate = endMs && !Number.isNaN(endMs) ? new Date(endMs) : undefined;
     return this.orderService.getOrdersById(
       page,
       limit,
       status,
-      search,
-      startDate,
-      endDate,
-      thisMonth,
+      search
     );
-  }
-
-  // Add order:
-  @Roles(UserType.client)
-  @Post()
-  @HttpCode(200)
-  createOrder(@Body() body: OrderDto) {
-    return this.orderService.createOrder(body);
-  }
-
-  // Cancel order:
-  @Roles(UserType.client)
-  @Delete(':id')
-  deleteOrder(@Param('id') id: number) {
-    return this.orderService.cancelOrderById(id);
   }
 
   // Edit order details:
@@ -76,5 +57,12 @@ export class OrderController {
   @Put(':id')
   updateOrder(@Param('id') id: number, @Body() body: OrderDto) {
     return this.orderService.updateOrderById(id, body);
+  }
+
+  // Cancel order:
+  @Roles(UserType.client)
+  @Delete(':id')
+  deleteOrder(@Param('id') id: number) {
+    return this.orderService.cancelOrderById(id);
   }
 }

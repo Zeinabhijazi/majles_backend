@@ -23,6 +23,13 @@ export class AdminController {
     private readonly adminService: AdminService
   ) {}
 
+  // Get monthly registration status
+  @Roles(UserType.admin)
+  @Get('status')
+  async getUserStats(@Query('year') year?: number) {
+    return this.adminService.getMonthlyRegistrationStats(Number(year));
+  }
+
   // Fetch all Users:
   @Roles(UserType.admin)
   @Get('allUsers')
@@ -34,6 +41,13 @@ export class AdminController {
     @Query("search") search?: string,    
   ) : Promise<PaginationDto<UserTypeRes>> {
     return await this.adminService.getAllUsers(page, limit, userType, isDeleted, search);
+  }
+
+  // To delete a reader or a user:
+  @Roles(UserType.admin)
+  @Delete(':id')
+  async deleteUser(@Param('id') id: number) {
+    return this.adminService.deleteUserById(id);
   }
 
   // Fetch all orders:
@@ -53,14 +67,7 @@ export class AdminController {
     const endDate = endMs && !Number.isNaN(endMs) ? new Date(endMs) : undefined;
     return await this.adminService.getAllOrders(page, limit, status, startDate, endDate);
   }
-  
-  // To delete a reader or a user:
-  @Roles(UserType.admin)
-  @Delete(':id')
-  async deleteUser(@Param('id') id: number) {
-    return this.adminService.deleteUserById(id);
-  }
-
+ 
   // Assign reader by admin:
   @Roles(UserType.admin)
   @Put(':id')
@@ -72,12 +79,5 @@ export class AdminController {
       id,
       assignOrderDto,
     );
-  }
-
-  // Get monthly registration status
-  @Roles(UserType.admin)
-  @Get('status')
-  async getUserStats(@Query('year') year?: number) {
-    return this.adminService.getMonthlyRegistrationStats(Number(year));
-  }
+  } 
 }

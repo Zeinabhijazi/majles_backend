@@ -1,7 +1,7 @@
 import { PrismaService } from '@/prisma/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AssignReaderDto } from '@/dto/assignReader.dto';
-import { UserType } from '@generated/index';
+import { OrderStatus, UserType } from '@generated/index';
 import { UserTypeRes } from './model_structure/users_response';
 import { OrderTypeRes } from './model_structure/orders_response';
 import { PaginationDto } from '@/dto/pagination.dto';
@@ -10,54 +10,36 @@ import { PaginationDto } from '@/dto/pagination.dto';
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getAllOrders(
-    page: number,
-    pageSize: number,
-    status?: string,
-    startDate?: Date,
-    endDate?: Date,
-  ): Promise<PaginationDto<OrderTypeRes>> {
-    const offset = (page - 1) * pageSize;
-    let where: any = {};
+  async getMonthlyRegistrationStats(year?: number) {
+    const targetYear = year || new Date().getFullYear();
 
-    if (status && status !== 'all') {
-      if (status === 'assigned') {
-        where.isAccepted = true;
-      } else if (status === 'notAssigned') {
-        where.isAccepted = false;
-      }
-    }
-
-    // If both provided, use them directly as instants (no timezone conversion)
-    if (startDate && endDate) {
-      where.orderDate = { gte: startDate, lte: endDate };
-    }
-
-    const orders = await this.prisma.order.findMany({
-      include: {
-        client: true,
-        reader: true,
+    // Fetch only users created in the given year
+    const users = await this.prisma.user.findMany({
+      where: {
+        createdAt: {
+          gte: new Date(`${targetYear}-01-01T00:00:00Z`),
+          lt: new Date(`${targetYear + 1}-01-01T00:00:00Z`),
+        },
       },
-      where,
-      orderBy: {
-        createdAt: 'desc',
-      },
-      skip: offset,
-      take: pageSize,
+      select: { createdAt: true },
     });
 
-    const itemsCount = await this.prisma.order.count({ where });
+    // Initialize stats for all 12 months
+    const stats: Record<string, number> = {};
+    for (let i = 1; i <= 12; i++) {
+      const key = `${targetYear}-${String(i).padStart(2, '0')}`;
+      stats[key] = 0;
+    }
 
-    const itemsCountWithDel = await this.prisma.order.count({
-      where: { isDeleted: false },
-    });
+    // Count registrations per month
+    for (const user of users) {
+      const date = new Date(user.createdAt);
+      const month = date.getMonth() + 1;
+      const key = `${date.getFullYear()}-${String(month).padStart(2, '0')}`;
+      stats[key]++;
+    }
 
-    return {
-      content: orders,
-      itemsCount,
-      itemsCountWithDel,
-      pageCount: Math.ceil(itemsCount / pageSize),
-    } as PaginationDto<OrderTypeRes>;
+    return stats;
   }
 
   async getAllUsers(
@@ -180,49 +162,69 @@ export class AdminService {
     return 'User deleted successfully';
   }
 
+  async getAllOrders(
+    page: number,
+    pageSize: number,
+    status?: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<PaginationDto<OrderTypeRes>> {
+    const offset = (page - 1) * pageSize;
+    let where: any = {};
+
+    if (status && status !== 'all') {
+      if (status === 'assigned') {
+        where.status = "accepted";
+      } else if (status === 'notAssigned') {
+        where.status = "pending"
+      }
+    }
+
+    // If both provided, use them directly as instants (no timezone conversion)
+    if (startDate && endDate) {
+      where.orderDate = { gte: startDate, lte: endDate };
+    }
+
+    const orders = await this.prisma.order.findMany({
+      include: {
+        client: true,
+        reader: true,
+      },
+      where,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip: offset,
+      take: pageSize,
+    });
+
+    const itemsCount = await this.prisma.order.count({ where });
+
+    const itemsCountWithDel = await this.prisma.order.count({
+      where:{
+        NOT: { status: 'deleted' },
+      }
+    });
+
+    return {
+      content: orders,
+      itemsCount,
+      itemsCountWithDel,
+      pageCount: Math.ceil(itemsCount / pageSize),
+    } as PaginationDto<OrderTypeRes>;
+  }
+
   async assignReader(
     id: number,
     assignReaderDto: AssignReaderDto,
   ): Promise<any> {
     const newData = {
       readerId: assignReaderDto.readerId,
-      isAccepted: true,
+      status: OrderStatus.accepted,
     };
     return this.prisma.order.update({
       where: { id },
       data: newData,
     });
-  }
-
-  async getMonthlyRegistrationStats(year?: number) {
-    const targetYear = year || new Date().getFullYear();
-
-    // Fetch only users created in the given year
-    const users = await this.prisma.user.findMany({
-      where: {
-        createdAt: {
-          gte: new Date(`${targetYear}-01-01T00:00:00Z`),
-          lt: new Date(`${targetYear + 1}-01-01T00:00:00Z`),
-        },
-      },
-      select: { createdAt: true },
-    });
-
-    // Initialize stats for all 12 months
-    const stats: Record<string, number> = {};
-    for (let i = 1; i <= 12; i++) {
-      const key = `${targetYear}-${String(i).padStart(2, '0')}`;
-      stats[key] = 0;
-    }
-
-    // Count registrations per month
-    for (const user of users) {
-      const date = new Date(user.createdAt);
-      const month = date.getMonth() + 1;
-      const key = `${date.getFullYear()}-${String(month).padStart(2, '0')}`;
-      stats[key]++;
-    }
-
-    return stats;
   }
 }
