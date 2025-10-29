@@ -61,7 +61,23 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: {
         email: dto.email,
-        isDeleted: false, 
+        isDeleted: false,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        gender: true,
+        phoneNumber: true,
+        latitude: true,
+        longitude: true,
+        addressOne: true,
+        addressTwo: true,
+        country: true,
+        city: true,
+        postNumber: true,
+        email: true,
+        userType: true,
       },
     });
 
@@ -69,8 +85,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    const fullUser = await this.prisma.user.findUnique({
+      where: { email: dto.email, isDeleted: false },
+    });
+
+    if (!fullUser) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     // Check if the password is correct for this account
-    const pwdMatches = await argon.verify(user.password, dto.password);
+    const pwdMatches = await argon.verify(fullUser.password, dto.password);
 
     if (!pwdMatches) {
       throw new UnauthorizedException('Invalid credentials');
@@ -112,5 +136,4 @@ export class AuthService {
 
     return token;
   }
-
 }

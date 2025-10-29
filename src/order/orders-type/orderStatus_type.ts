@@ -1,6 +1,7 @@
 export interface OrdersStatus {
   accepted: number;
-  cancelled: number;
+  deleted: number;
   pending: number;
   completed: number;
+  rejected: number;
 }
