@@ -43,12 +43,14 @@ export class OrderController {
     @Query('limit') limit: number = 10,
     @Query('status') status?: string,
     @Query('search') search?: string,
+    @Query('thisMonth') thisMonth?: boolean,
   ) {
     return this.orderService.getOrdersById(
       page,
       limit,
       status,
-      search
+      search, 
+      thisMonth
     );
   }
 
@@ -60,7 +62,7 @@ export class OrderController {
   }
 
   // Cancel order:
-  @Roles(UserType.client)
+  @Roles(UserType.client, UserType.reader)
   @Delete(':id')
   deleteOrder(@Param('id') id: number) {
     return this.orderService.cancelOrderById(id);

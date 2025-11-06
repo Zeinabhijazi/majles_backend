@@ -12,7 +12,7 @@ export class OrderDto {
   readerId?: number;
 
   @IsDate()
-  @IsNotEmpty()
+  @IsOptional()
   orderDate: Date;
 
   @IsOptional()

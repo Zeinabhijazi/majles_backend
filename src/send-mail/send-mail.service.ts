@@ -19,42 +19,80 @@ export class SendMailService {
   }
 
   async sendContactForm(data: EmailDTO) {
-    const { firstname, lastname, email, phoneNumber,  message } = data;
-    const subject = `New Contact Form Message from ${firstname} ${lastname}`;
-    const text = `
-      From: ${firstname} ${lastname}
-      Email: ${email}
-      Message: ${message}
-    `;
-
+    const { firstname, lastname, email, phoneNumber, subject, message } = data;
     const html = `
-      <h3>New Contact Message</h3>
       <p><strong>From:</strong> ${firstname} ${lastname}</p>
       <p><strong>Email:</strong> ${email}</p>
       <p><strong>Message:</strong></p>
       <p>${message}</p>
     `;
 
-    const info = await this.transporter.sendMail({
-      from: `"My App" <${process.env.SMTP_USER}>`,
-      to: process.env.CONTACT_RECEIVER || process.env.SMTP_USER, 
+    // Send email to the supports
+    await this.transporter.sendMail({
+      from: email,
+      to: process.env.CONTACT_RECEIVER || process.env.SMTP_USER,
       subject,
-      text,
       html,
     });
-    
+
     // Send confirmation email to the user
     await this.transporter.sendMail({
-      from: `"My App" <${process.env.SMTP_USER}>`,
+      from: `<${process.env.SMTP_USER}>`,
       to: email,
-      subject: "Thank you for contacting us!",
+      subject: 'Thank you for contacting us!',
       html: `
-        <p>Hi ${firstname},</p>
-        <p>We received your message and will get back to you soon.</p>
-        <p>Best regards,<br>My App Team</p>
+        <div style="width: 70%; margin: 0 auto; font-family: Arial, sans-serif;">
+          <!-- Header -->
+          <table
+            role="presentation"
+            width="100%"
+            cellspacing="0"
+            cellpadding="0"
+            style="
+              background-color: #242329;
+              height: 100px;
+              border-top-left-radius: 6px;
+              border-top-right-radius: 6px;
+            "
+          >
+            <tr>
+              <td
+                align="center"
+                valign="middle"
+                style="text-align: center; vertical-align: middle;"
+              >
+                <h1
+                  style="
+                    color: white;
+                    margin: 0;
+                    font-size: 24px;
+                    font-weight: bold;
+                    line-height: 1.4;
+                  "
+                >
+                  Confirmation Email
+                </h1>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Body -->
+          <div
+            style="
+              background-color: #f3f4f6;
+              padding: 30px 40px;
+              border-bottom-left-radius: 6px;
+              border-bottom-right-radius: 6px;
+            "
+          >
+            <p style="margin-top: 0;">Hi ${firstname} ${lastname},</p>
+            <p>We received your message and will get back to you soon.</p>
+            <p>Best regards,<br />My App Team</p>
+          </div>
+        </div>
       `,
     });
 
-    return " Email sent successfully";
+    return ' Email sent successfully';
   }
 }
