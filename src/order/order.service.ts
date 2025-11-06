@@ -75,28 +75,30 @@ export class OrderService {
     pageSize: number,
     status?: string,
     search?: string,
+    thisMonth?: boolean,
   ) {
     const userId = this.user.user.id;
+    const offset = (page - 1) * pageSize;
     if (this.user.user.userType === UserType.client) {
-      const offset = (page - 1) * pageSize;
       const andConditions: any[] = [{ clientId: userId }];
 
-      if (status && status !== "all") {
+      if (status && status !== 'all') {
         andConditions.push({
           status: status as OrderStatus,
         });
       }
+      
       if (search?.trim()) {
-        const [firstPart, lastPart] = search.trim().split(" ");
+        const [firstPart, lastPart] = search.trim().split(' ');
         const nameFilters: any[] = [
           {
             reader: {
-              firstName: { contains: search, mode: "insensitive" },
+              firstName: { contains: search, mode: 'insensitive' },
             },
           },
           {
             reader: {
-              lastName: { contains: search, mode: "insensitive" },
+              lastName: { contains: search, mode: 'insensitive' },
             },
           },
         ];
@@ -106,8 +108,8 @@ export class OrderService {
           nameFilters.push({
             reader: {
               AND: [
-                { firstName: { contains: firstPart, mode: "insensitive" } },
-                { lastName: { contains: lastPart, mode: "insensitive" } },
+                { firstName: { contains: firstPart, mode: 'insensitive' } },
+                { lastName: { contains: lastPart, mode: 'insensitive' } },
               ],
             },
           });
@@ -122,13 +124,81 @@ export class OrderService {
         where,
         skip: offset,
         take: pageSize,
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
       });
       const itemsCount = await this.prisma.order.count({ where });
       return {
         content: orders,
         itemsCount,
         pageCount: Math.ceil(itemsCount / pageSize),
+      };
+    } else {
+      let where: any = { readerId: userId };
+
+      if (status === OrderStatus.pending) {
+        where = {
+          ...where,
+          status: OrderStatus.pending,
+        };
+      }
+
+      if (thisMonth) {
+        const now = new Date();
+        const startOfMonthUTC = new Date(
+          Date.UTC(now.getFullYear(), now.getMonth(), 1),
+        );
+        const endOfMonthUTC = new Date(
+          Date.UTC(now.getFullYear(), now.getMonth() + 1, 1),
+        );
+
+        where = {
+          ...where,
+          orderDate: {
+            gte: startOfMonthUTC,
+            lt: endOfMonthUTC,
+          },
+          status: OrderStatus.accepted,
+        };
+      }
+
+      const orders = await this.prisma.order.findMany({
+        include: { client: true, reader: true },
+        where,
+        skip: offset,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // Counts in parallel
+      const [
+        itemsCount,
+        pendingItemsCount,
+        completedItemsCount,
+        acceptedItemsCount,
+        rejectedItemsCount,
+      ] = await Promise.all([
+        this.prisma.order.count({ where }),
+        this.prisma.order.count({
+          where: { readerId: userId, status: OrderStatus.pending },
+        }),
+        this.prisma.order.count({
+          where: { readerId: userId, status: OrderStatus.completed },
+        }),
+        this.prisma.order.count({
+          where: { readerId: userId, status: OrderStatus.accepted },
+        }),
+        this.prisma.order.count({
+          where: { readerId: userId, status: OrderStatus.rejected },
+        }),
+      ]);
+      return {
+        content: orders,
+        itemsCount,
+        pageCount: Math.ceil(itemsCount / pageSize),
+        pendingItemsCount,
+        completedItemsCount,
+        acceptedItemsCount,
+        rejectedItemsCount,
       };
     }
   }
@@ -162,7 +232,10 @@ export class OrderService {
     }
     // If user is reader --> accept this order or no
     if (this.user.user.userType === UserType.reader) {
-      const newData = { status: OrderStatus.accepted }
+      const newData = {
+        readerId: orderDto.readerId,
+        status: OrderStatus.accepted,
+      };
       return this.prisma.order.update({
         where: { id },
         data: newData,
@@ -172,29 +245,46 @@ export class OrderService {
 
   // Cancel order (Remark: client should not cancel order if the order was accepted by reader)
   async cancelOrderById(id: number): Promise<string> {
-    // Fetch the order first
-    const order = await this.prisma.order.findUnique({
-      where: { id }
-    });
+    if (this.user.user.userType === 'client') {
+      // Fetch the order first
+      const order = await this.prisma.order.findUnique({
+        where: { id },
+      });
 
-    if (!order) {
-      throw new Error('Order not found');
+      if (!order) {
+        throw new Error('Order not found');
+      }
+
+      // Prevent deletion if already accepted
+      if (order.status === OrderStatus.accepted) {
+        throw new Error('Cannot delete order: it has already been accepted');
+      }
+
+      const newData = {
+        status: OrderStatus.deleted,
+      };
+
+      await this.prisma.order.update({
+        where: { id },
+        data: newData,
+      });
+
+      return 'Order deleted successfully';
+    } 
+    else {
+      const order = await this.prisma.order.findUnique({
+        where: { id },
+      });
+
+      if (!order) throw new Error('Order not found');
+
+      const newData = { status: OrderStatus.rejected };
+
+      await this.prisma.order.update({
+        where: { id },
+        data: newData,
+      });
+      return 'Order rejected successfully';
     }
-
-    // Prevent deletion if already accepted
-    if (order.status === OrderStatus.accepted) {
-      throw new Error('Cannot delete order: it has already been accepted');
-    }
-
-    const newData = {
-      status: OrderStatus.deleted
-    }
-
-    await this.prisma.order.update({
-      where: { id },
-      data: newData,
-    });
-
-    return 'Order deleted successfully';
   }
 }

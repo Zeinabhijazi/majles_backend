@@ -172,11 +172,21 @@ export class AdminService {
     const offset = (page - 1) * pageSize;
     let where: any = {};
 
-    if (status && status !== 'all') {
-      if (status === 'assigned') {
-        where.status = "accepted";
-      } else if (status === 'notAssigned') {
-        where.status = "pending"
+    if (status && status !== "all") {
+      if (status === "assigned") {
+        where = {
+          readerId: { not: null },
+          status: OrderStatus.pending,
+        }
+      } 
+      else if (status === "pending") {
+        where = {
+          readerId: null,
+          status: OrderStatus.pending,
+        }
+      }
+      else {
+        where = { status: status as OrderStatus }
       }
     }
 
@@ -220,7 +230,6 @@ export class AdminService {
   ): Promise<any> {
     const newData = {
       readerId: assignReaderDto.readerId,
-      status: OrderStatus.accepted,
     };
     return this.prisma.order.update({
       where: { id },
