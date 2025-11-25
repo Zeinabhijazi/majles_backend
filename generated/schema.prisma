@@ -38,27 +38,41 @@ enum OrderStatus {
 }
 
 model user {
-  id          Int         @id(map: "CREATE_USER_TABLE_PRIMARY_KEY") @default(autoincrement())
-  firstName   String      @map("first_name")
-  lastName    String      @map("last_name")
-  gender      Gender
-  userType    UserType    @map("user_type")
-  email       String      @unique @db.VarChar(320)
-  phoneNumber String      @map("phone_number") @db.VarChar(20)
-  password    String      @db.VarChar(255)
-  longitude   Float       @db.DoublePrecision
-  latitude    Float       @db.DoublePrecision
-  addressOne  String      @map("address_one")
-  addressTwo  String?     @map("address_two")
-  postNumber  Int         @map("post_number")
-  country     String
-  city        String
-  isDeleted   Boolean     @default(false) @map("is_deleted")
-  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz()
-  clientOrder order[]     @relation("ClientOrder")
-  readerOrder order[]     @relation("ReaderOrder")
-  token       authToken[]
+  id            Int                 @id(map: "CREATE_USER_TABLE_PRIMARY_KEY") @default(autoincrement())
+  firstName     String              @map("first_name")
+  lastName      String              @map("last_name")
+  gender        Gender
+  userType      UserType            @map("user_type")
+  email         String              @unique @db.VarChar(320)
+  phoneNumber   String              @map("phone_number") @db.VarChar(20)
+  password      String              @db.VarChar(255)
+  longitude     Float               @db.DoublePrecision
+  latitude      Float               @db.DoublePrecision
+  addressOne    String              @map("address_one")
+  addressTwo    String?             @map("address_two")
+  postNumber    Int                 @map("post_number")
+  country       String
+  city          String
+  isDeleted     Boolean             @default(false) @map("is_deleted")
+  verified      Boolean             @default(false)
+  createdAt     DateTime            @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
+  clientOrder   order[]             @relation("ClientOrder")
+  readerOrder   order[]             @relation("ReaderOrder")
+  token         authToken[]
+  verifications emailVerification[]
+}
+
+model emailVerification {
+  id        Int      @id @default(autoincrement())
+  tokenId   String   @unique
+  expiresAt DateTime @db.Timestamptz()
+  userId    Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  user      user     @relation(fields: [userId], references: [id])
+
+  @@map("email_Verification")
 }
 
 model order {

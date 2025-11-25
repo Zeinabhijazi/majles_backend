@@ -137,6 +137,16 @@ exports.Prisma.UserScalarFieldEnum = {
   country: 'country',
   city: 'city',
   isDeleted: 'isDeleted',
+  verified: 'verified',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.EmailVerificationScalarFieldEnum = {
+  id: 'id',
+  tokenId: 'tokenId',
+  expiresAt: 'expiresAt',
+  userId: 'userId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -201,6 +211,7 @@ exports.OrderStatus = exports.$Enums.OrderStatus = {
 
 exports.Prisma.ModelName = {
   user: 'user',
+  emailVerification: 'emailVerification',
   order: 'order',
   authToken: 'authToken'
 };

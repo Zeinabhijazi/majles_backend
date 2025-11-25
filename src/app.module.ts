@@ -15,6 +15,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { AdminModule } from './admin/admin.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { SendMailModule } from './send-mail/send-mail.module';
+import { VerifyEmailModule } from './verify-email/verify-email.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { SendMailModule } from './send-mail/send-mail.module';
     AdminModule,
     DashboardModule,
     SendMailModule,
+    VerifyEmailModule,
   ],
   providers: [JwtService, PrismaService],
 })
@@ -43,7 +45,11 @@ export class AppModule implements NestModule {
         method: RequestMethod.ALL,
       })
       .exclude({
-        path: '/mail/send',
+        path: '/mail/(.*)',
+        method: RequestMethod.ALL,
+      })
+      .exclude({
+        path: '/verify-email/(.*)',
         method: RequestMethod.ALL,
       })
       .forRoutes({

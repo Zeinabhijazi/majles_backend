@@ -53,11 +53,25 @@ model user {
   country     String
   city        String
   isDeleted   Boolean     @default(false) @map("is_deleted") 
+  verified    Boolean     @default(false)
   createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz()
   clientOrder order[]     @relation("ClientOrder")
   readerOrder order[]     @relation("ReaderOrder")
   token       authToken[]
+  verifications emailVerification[]
+}
+
+model emailVerification {
+  id         Int      @id @default(autoincrement())
+  tokenId    String   @unique  
+  expiresAt  DateTime @db.Timestamptz()
+  userId     Int
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  user       user     @relation(fields: [userId], references: [id])
+  
+  @@map("email_Verification")
 }
 
 model order {

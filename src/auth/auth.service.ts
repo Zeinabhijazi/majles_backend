@@ -10,16 +10,18 @@ import { JwtService } from '@nestjs/jwt';
 import { SignupDto } from '@/dto/signup.dto';
 import { SigninDto } from '@/dto/signin.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { SendMailService } from '@/send-mail/send-mail.service';
 
 @Injectable({})
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly mailService: SendMailService,
   ) {}
 
   async signup(dto: SignupDto) {
-    // Check if password and confirmPassword match
+    // 1. Check if password and confirmPassword match
     if (dto.password !== dto.confirmPassword) {
       throw new BadRequestException('Passwords do not match');
     }
@@ -27,6 +29,7 @@ export class AuthService {
     const hash = await argon.hash(dto.password); // Hash the password
 
     try {
+      // 2. Create user
       const user = await this.prisma.user.create({
         data: {
           firstName: dto.firstName,
@@ -45,7 +48,29 @@ export class AuthService {
           city: dto.city,
         },
       });
-      return user;
+      
+      // 3. Generate raw token
+      const rawToken = uuidv4(); 
+
+      // 4. Save token in database
+      await this.prisma.emailVerification.create({
+        data: {
+          tokenId: rawToken,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+          userId: user.id,
+        },
+      });
+
+      // 5. Build verification link
+      const verifyLink = `${process.env.FRONTEND_URL}/verify-email/${rawToken}/${user.id}`;
+
+      // 6. Send email
+      await this.mailService.sendVerificationEmail(user.email, verifyLink);
+
+      return {
+        user,
+        message: "Signup successful! Please check your email to verify your account.",
+      };
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {

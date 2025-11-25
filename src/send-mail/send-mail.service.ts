@@ -51,10 +51,13 @@ function emailTemplate(title: string, content: string) {
       </div>
     </div>
   `;
+
+  /// <a href="https://xyz.com/en/verify/{Token1}/{userID}">Click me</a>
+  /// <a href="https://xyz.com/en/verify?token=TOKEN1&userId=User1">Click me</a>
 }
 @Injectable()
 export class SendMailService {
-  private transporter: nodemailer.Transporter;
+  private readonly transporter: nodemailer.Transporter;
 
   constructor() {
     this.transporter = nodemailer.createTransport({
@@ -107,4 +110,48 @@ export class SendMailService {
 
     return 'Email sent successfully';
   }
+
+  async sendVerificationEmail(userEmail: string, verifyLink: string) {
+    const title = "Verify Your Email";
+
+    const content = `
+      <p>Hello,</p>
+      <p>Thank you for registering! Please verify your email address by clicking the button below:</p>
+      
+      <div style="text-align: center; margin-top: 20px;">
+        <a 
+          href="${verifyLink}" 
+          style="
+            background-color: #4F46E5;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bold;
+          "
+        >
+          Verify Email
+        </a>
+      </div>
+
+      <p style="margin-top: 20px;">Or copy/paste this link into your browser:</p>
+      <p style="word-break: break-all;">${verifyLink}</p>
+
+      <p style="margin-top: 20px;">This link will expire in 24 hours.</p>
+      <p>Best regards,<br />My App Team</p>
+    `;
+
+    const html = emailTemplate(title, content);
+
+    await this.transporter.sendMail({
+      from: `My App <${process.env.SMTP_USER}>`,
+      to: userEmail,
+      subject: "Verify Your Email",
+      html,
+    });
+
+    return "Verification email sent";
+  }
+
 }
