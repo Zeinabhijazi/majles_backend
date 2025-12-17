@@ -36,6 +36,14 @@ enum OrderStatus {
 
   @@map("order_status")
 }
+
+enum VerificationStatus {
+  verifyEmail
+  forgetPassword
+
+  @@map("verification_status")
+}
+
 model user {
   id          Int         @id(map: "CREATE_USER_TABLE_PRIMARY_KEY") @default(autoincrement())
   firstName   String      @map("first_name")
@@ -59,19 +67,18 @@ model user {
   clientOrder order[]     @relation("ClientOrder")
   readerOrder order[]     @relation("ReaderOrder")
   token       authToken[]
-  verifications emailVerification[]
+  verifications Verification[]
 }
 
-model emailVerification {
+model Verification  {
   id         Int      @id @default(autoincrement())
   tokenId    String   @unique  
   expiresAt  DateTime @db.Timestamptz()
+  status     VerificationStatus
   userId     Int
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
   user       user     @relation(fields: [userId], references: [id])
-  
-  @@map("email_Verification")
 }
 
 model order {
