@@ -122,7 +122,7 @@ export class SendMailService {
         <a 
           href="${verifyLink}" 
           style="
-            background-color: #4F46E5;
+            background-color: #242329;
             color: white;
             padding: 12px 20px;
             border-radius: 6px;
@@ -154,4 +154,46 @@ export class SendMailService {
     return "Verification email sent";
   }
 
+  async sendForgetPasswordEmail(userEmail: string, verifyLink: string) {
+    const title = "Forget Password";
+
+    const content = `
+      <p>Hello,</p>
+      <p>Thank you ! Please verify reset your password by clicking the button below:</p>
+      
+      <div style="text-align: center; margin-top: 20px;">
+        <a 
+          href="${verifyLink}" 
+          style="
+            background-color: #242329;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bold;
+          "
+        >
+          Reset Password
+        </a>
+      </div>
+
+      <p style="margin-top: 20px;">Or copy/paste this link into your browser:</p>
+      <p style="word-break: break-all;">${verifyLink}</p>
+
+      <p style="margin-top: 20px;">This link will expire in 24 hours.</p>
+      <p>Best regards,<br />My App Team</p>
+    `;
+
+    const html = emailTemplate(title, content);
+
+    await this.transporter.sendMail({
+      from: `My App <${process.env.SMTP_USER}>`,
+      to: userEmail,
+      subject: "Reset Password",
+      html,
+    });
+
+    return "email sent";
+  }
 }

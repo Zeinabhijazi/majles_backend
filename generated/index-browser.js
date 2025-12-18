@@ -142,10 +142,11 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.EmailVerificationScalarFieldEnum = {
+exports.Prisma.VerificationScalarFieldEnum = {
   id: 'id',
   tokenId: 'tokenId',
   expiresAt: 'expiresAt',
+  status: 'status',
   userId: 'userId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -201,6 +202,11 @@ exports.UserType = exports.$Enums.UserType = {
   reader: 'reader'
 };
 
+exports.VerificationStatus = exports.$Enums.VerificationStatus = {
+  verifyEmail: 'verifyEmail',
+  forgetPassword: 'forgetPassword'
+};
+
 exports.OrderStatus = exports.$Enums.OrderStatus = {
   pending: 'pending',
   completed: 'completed',
@@ -211,7 +217,7 @@ exports.OrderStatus = exports.$Enums.OrderStatus = {
 
 exports.Prisma.ModelName = {
   user: 'user',
-  emailVerification: 'emailVerification',
+  Verification: 'Verification',
   order: 'order',
   authToken: 'authToken'
 };

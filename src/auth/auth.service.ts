@@ -11,6 +11,8 @@ import { SignupDto } from '@/dto/signup.dto';
 import { SigninDto } from '@/dto/signin.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { SendMailService } from '@/send-mail/send-mail.service';
+import { VerificationStatus } from '@generated/index';
+import { ForgetPasswordDto } from '@/dto/forget-password.dto';
 
 @Injectable({})
 export class AuthService {
@@ -53,10 +55,11 @@ export class AuthService {
       const rawToken = uuidv4(); 
 
       // 4. Save token in database
-      await this.prisma.emailVerification.create({
+      await this.prisma.verification.create({
         data: {
           tokenId: rawToken,
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+          status: VerificationStatus.verifyEmail,
           userId: user.id,
         },
       });
@@ -87,6 +90,7 @@ export class AuthService {
       where: {
         email: dto.email,
         isDeleted: false,
+        verified: true,
       },
       select: {
         id: true,
@@ -160,5 +164,36 @@ export class AuthService {
       .then();
 
     return token;
+  }
+
+  async forgetPassword(dto: ForgetPasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (!user) {
+      throw new BadRequestException("User not found");
+    }
+
+    // generate raw token
+    const rawToken = uuidv4();
+
+    // Save token in database
+    await this.prisma.verification.create({
+      data: {
+        tokenId: rawToken,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        status: VerificationStatus.forgetPassword,
+        userId: user.id,
+      },
+    });
+
+    // Build verification link
+    const verifyLink = `${process.env.FRONTEND_URL}/forget-password/${rawToken}/${user.id}`;
+
+    // Send email
+    await this.mailService.sendForgetPasswordEmail(dto.email, verifyLink);
+
+    return { success: true, message: "Reset link sent" };
   }
 }

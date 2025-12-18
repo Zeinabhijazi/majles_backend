@@ -16,6 +16,7 @@ import { AdminModule } from './admin/admin.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { SendMailModule } from './send-mail/send-mail.module';
 import { VerifyEmailModule } from './verify-email/verify-email.module';
+import { ResetPasswordModule } from './reset-password/reset-password.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { VerifyEmailModule } from './verify-email/verify-email.module';
     DashboardModule,
     SendMailModule,
     VerifyEmailModule,
+    ResetPasswordModule,
   ],
   providers: [JwtService, PrismaService],
 })
@@ -50,6 +52,10 @@ export class AppModule implements NestModule {
       })
       .exclude({
         path: '/verify-email/(.*)',
+        method: RequestMethod.ALL,
+      })
+      .exclude({
+        path: '/reset-password/(.*)',
         method: RequestMethod.ALL,
       })
       .forRoutes({

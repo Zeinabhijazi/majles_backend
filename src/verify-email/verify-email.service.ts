@@ -1,4 +1,5 @@
 import { PrismaService } from '@/prisma/prisma.service';
+import { VerificationStatus } from '@generated/index';
 import { BadRequestException, Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -8,8 +9,8 @@ export class VerifyEmailService {
     ) {}
     
     async verifyEmail(token: string, userId: number) {
-        const record = await this.prisma.emailVerification.findUnique({
-            where: { tokenId: token },
+        const record = await this.prisma.verification.findUnique({
+            where: { tokenId: token, userId: userId, status: VerificationStatus.verifyEmail },
             include: { user: true },
         });
 
